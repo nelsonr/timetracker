@@ -13,7 +13,7 @@
 }
 
 .popup__overlay {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.6);
     width: 100%;
     height: 100%;
     position: absolute;
@@ -30,9 +30,15 @@
     z-index: 1;
     border-radius: 8px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    transform: translateY(var(--space-m));
+    transition: all 300ms ease-in-out;
 }
 
 .popup--show {
     opacity: 1;
     pointer-events: all;
+
+    .popup__content {
+        transform: translateY(0);
+    }
 }

@@ -35,7 +35,7 @@ function App () {
     function onKeyDown (ev: KeyboardEvent) {
         if (!isEditing && !showHelpPopup) {
             switch (true) {
-                case ev.key === "?":
+                case keys.isShowHelp(ev.key):
                     setShowHelpPopup(true);
                     break;
 
@@ -68,7 +68,7 @@ function App () {
                     break;
             }
         } else if (showHelpPopup) {
-            if (ev.key === "Escape") {
+            if (keys.isCloseHelp(ev.key)) {
                 setShowHelpPopup(false);
             }
         } else {
