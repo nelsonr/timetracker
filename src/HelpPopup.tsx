@@ -1,4 +1,3 @@
-import { KeyboardEvent } from "react";
 import Help from "./components/HelpAction";
 import Popup from "./components/Popup";
 import Tag from "./components/Tag";
@@ -38,19 +37,8 @@ function HelpPopup (props: HelpPopupProps) {
         )
     });
 
-    function onKeyDown (ev: KeyboardEvent) {
-        switch (ev.key) {
-            case "Escape":
-                hideHelpPopup();
-                break;
-
-            default:
-                break;
-        }
-    }
-
     return (
-        <div className="help" tabIndex={-1} onKeyDown={onKeyDown}>
+        <div className="help">
             <Popup show={showPopup} onClose={hideHelpPopup}>
                 <table>
                     <thead>
