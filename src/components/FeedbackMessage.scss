@@ -1,0 +1,18 @@
+.feedback-message {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    min-width: 480px;
+    padding: var(--space-base);
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    top: var(--space-base);
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(-100% - var(--space-base)));
+    transition: transform 100ms ease-out;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.feedback-message--show {
+    transform: translateX(-50%) translateY(0);
+}

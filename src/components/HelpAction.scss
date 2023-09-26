@@ -1,0 +1,19 @@
+.help-action {
+    position: fixed;
+    top: var(--space-base);
+    right: var(--space-base);
+    border: 1px solid;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    line-height: 32px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+        background-color: #000;
+        color: #fff;
+        filter: invert(100%);
+    }
+}
