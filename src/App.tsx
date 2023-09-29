@@ -4,20 +4,22 @@ import FeedbackMessage from './components/FeedbackMessage';
 import useLocalStorage from './components/LocalStorage';
 import Task from './components/Task'
 import { keys } from "./keybindings";
-import { createTask, getTimeSpent } from './utils';
+import { createTask, findNextTaskId, findPrevTaskId, getTimeSpent, getDatesSortedByOldest } from './utils';
 
 import './App.scss'
 import HelpPopup from './HelpPopup';
 
+const ONE_MINUTE = 60000;
+
 function App () {
     const [feedbackMessage, setFeedbackMessage] = useState({ message: "", show: false });
-    const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+    const [currentTaskId, setCurrentTaskId] = useState<number | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [showHelpPopup, setShowHelpPopup] = useState(false);
     const [tasks, setTasks] = useLocalStorage<Task[]>("tasks", () => {
         return [
-            createTask("New task"),
-        ]
+            createTask("New Task")
+        ];
     });
 
     const timerRef = useRef(0);
@@ -30,7 +32,15 @@ function App () {
                 5000
             );
         }
-    }, [feedbackMessage]);
+
+        if (!currentTaskId && tasks.length > 0) {
+            setCurrentTaskId(tasks[tasks.length - 1].id);
+        }
+
+        if (tasks.length === 0) {
+            setTasks([createTask("New Task")]);
+        }
+    }, [feedbackMessage, currentTaskId, tasks, setTasks]);
 
     function onKeyDown (ev: KeyboardEvent) {
         if (!isEditing && !showHelpPopup) {
@@ -39,17 +49,19 @@ function App () {
                     setShowHelpPopup(true);
                     break;
 
-                case keys.isMoveDown(ev.key) && currentTaskIndex < (tasks.length - 1):
-                    setCurrentTaskIndex(currentTaskIndex + 1);
+                case keys.isMoveDown(ev.key) && currentTaskId !== null:
+                    ev.preventDefault();
+                    setCurrentTaskId(findNextTaskId(tasks, currentTaskId as number));
                     break;
 
-                case keys.isMoveUp(ev.key) && currentTaskIndex > 0:
-                    setCurrentTaskIndex(currentTaskIndex - 1);
+                case keys.isMoveUp(ev.key) && currentTaskId !== null:
+                    ev.preventDefault();
+                    setCurrentTaskId(findPrevTaskId(tasks, currentTaskId as number));
                     break;
 
                 case keys.isEditTask(ev.key):
-                    setIsEditing(true);
                     ev.preventDefault();
+                    setIsEditing(true);
                     break;
 
                 case keys.isAddTask(ev.key):
@@ -57,7 +69,7 @@ function App () {
                     break;
 
                 case keys.isDeleteTask(ev.key):
-                    handleTaskRemove();
+                    onRemoveTask();
                     break;
 
                 case keys.isToggleTask(ev.key):
@@ -78,8 +90,10 @@ function App () {
         }
     }
 
-    function handleTaskRemove () {
-        if (tasks[currentTaskIndex].isRunning) {
+    function onRemoveTask () {
+        const currentTask = tasks.find((task) => task.id === currentTaskId);
+
+        if (currentTask && currentTask.isRunning) {
             setFeedbackMessage({
                 message: "Cannot delete a running task.",
                 show: true
@@ -88,7 +102,7 @@ function App () {
             return false;
         }
 
-        if (tasks[currentTaskIndex].totalTime > 0) {
+        if (currentTask && currentTask.totalTime > ONE_MINUTE) {
             setFeedbackMessage({
                 message: "Cannot delete a task with time tracked.",
                 show: true
@@ -102,23 +116,28 @@ function App () {
 
     function addTask (task: Task) {
         setTasks([...tasks, task]);
+        setCurrentTaskId(task.id)
     }
 
     function removeTask () {
-        const updatedTasks = tasks.filter((_task, index) => {
-            return index !== currentTaskIndex;
+        const updatedTasks = tasks.filter((task) => {
+            return task.id !== currentTaskId;
         });
 
         setTasks(updatedTasks);
 
-        if (updatedTasks.length === currentTaskIndex) {
-            setCurrentTaskIndex(currentTaskIndex - 1)
+        if (currentTaskId) {
+            if (updatedTasks.length > 0) {
+                setCurrentTaskId(findNextTaskId(updatedTasks, currentTaskId));
+            } else {
+                setCurrentTaskId(null);
+            }
         }
     }
 
     function updateTask (updatedTask: Task, id: number) {
-        const updatedTasks = tasks.map((task, index) => {
-            if (index === id) {
+        const updatedTasks = tasks.map((task) => {
+            if (task.id === id) {
                 return updatedTask;
             }
 
@@ -130,8 +149,8 @@ function App () {
     }
 
     function toggleTask () {
-        const updatedTasks = tasks.map((task, index) => {
-            if (index === currentTaskIndex) {
+        const updatedTasks = tasks.map((task) => {
+            if (currentTaskId === task.id) {
                 if (!task.isRunning) {
                     task.startAt = Date.now();
                     task.isRunning = true;
@@ -156,15 +175,7 @@ function App () {
         setTasks(updatedTasks);
     }
 
-    const dates = new Set(tasks.map((task) => (new Date(task.createdAt)).toDateString()));
-    let counter = 0;
-
-    // TODO: make this work with the currentTaskIndex
-    // const sortByMostRecent = (dateA: string, dateB: string) => {
-    //     return (new Date(dateB)).getTime() - (new Date(dateA)).getTime();
-    // };
-
-    const tasksGroupedByDate = Array.from(dates).map((dateString, dateIndex) => {
+    const tasksGroupedByDate = getDatesSortedByOldest(tasks).map((dateString) => {
         const tasksByDate = tasks.filter((task) =>
             (new Date(task.createdAt)).toDateString() === dateString
         );
@@ -173,25 +184,22 @@ function App () {
 
         const tasksList = tasksByDate.map((task) => {
             const li = (
-                <li key={counter}>
+                <li key={task.id}>
                     <Task
-                        key={counter}
-                        id={counter}
+                        id={task.id}
                         task={task}
-                        isFocused={currentTaskIndex === counter}
-                        isEditable={isEditing && currentTaskIndex === counter}
+                        isFocused={currentTaskId === task.id}
+                        isEditable={isEditing && currentTaskId === task.id}
                         onUpdate={updateTask}
                     />
                 </li>
             );
 
-            counter += 1;
-
             return li;
         });
 
         return (
-            <section key={dateIndex}>
+            <section key={dateString}>
                 <h3>{dateString} &mdash; <span>{getTimeSpent(totalTimeByDate)}</span></h3>
                 <ul>
                     {tasksList}

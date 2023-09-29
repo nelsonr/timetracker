@@ -1,7 +1,7 @@
 export const keybindings = {
     move_down: ["j", "ArrowDown"],
     move_up: ["k", "ArrowUp"],
-    add_task: ["a", "Enter"],
+    add_task: ["o", "Enter"],
     toggle_task: [" "], // Space key
     edit_task: ["e", "i"],
     close_edit_task: ["Escape"],
