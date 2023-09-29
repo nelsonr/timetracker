@@ -170,17 +170,9 @@ function App () {
 
     function toggleTask () {
         const updatedTasks = tasks.map((task) => {
-            if (currentTaskId === task.id) {
-                if (!task.isRunning) {
-                    task.startAt = Date.now();
-                    task.isRunning = true;
-                } else {
-                    if (task.startAt) {
-                        task.totalTime += Date.now() - task.startAt;
-                    }
-
-                    task.isRunning = false;
-                }
+            if (currentTaskId === task.id && !task.isRunning) {
+                task.startAt = Date.now();
+                task.isRunning = true;
             } else {
                 if (task.isRunning && task.startAt) {
                     task.totalTime += Date.now() - task.startAt;
