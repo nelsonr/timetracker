@@ -12,6 +12,18 @@ export function createTask (title: string, opts?: Partial<Task>): Task {
     }, opts);
 }
 
+export function stopTasks (tasks: Task[]) {
+    return tasks.map((task) => {
+        if (task.isRunning && task.startAt) {
+            task.totalTime += Date.now() - task.startAt;
+        }
+
+        task.isRunning = false;
+
+        return task;
+    });
+}
+
 export function getClassName (classList: string[]): string {
     return (
         classList

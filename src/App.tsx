@@ -4,7 +4,7 @@ import FeedbackMessage from './components/FeedbackMessage';
 import useLocalStorage from './components/LocalStorage';
 import Task from './components/Task'
 import { keys } from "./keybindings";
-import { createTask, findNextTaskId, findPrevTaskId, getTimeSpent, getDatesSortedByOldest } from './utils';
+import { createTask, findNextTaskId, findPrevTaskId, getTimeSpent, getDatesSortedByOldest, stopTasks } from './utils';
 
 import './App.scss'
 import HelpPopup from './HelpPopup';
@@ -40,6 +40,14 @@ function App () {
         if (tasks.length === 0) {
             setTasks([createTask("New Task")]);
         }
+
+        const onBeforeUnload = () => setTasks(stopTasks(tasks));
+
+        window.addEventListener("beforeunload", onBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", onBeforeUnload);
+        };
     }, [feedbackMessage, currentTaskId, tasks, setTasks]);
 
     function onKeyDown (ev: KeyboardEvent) {
