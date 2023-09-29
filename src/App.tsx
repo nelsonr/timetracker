@@ -3,11 +3,18 @@ import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import FeedbackMessage from './components/FeedbackMessage';
 import useLocalStorage from './components/LocalStorage';
 import Task from './components/Task'
+import HelpPopup from './HelpPopup';
 import { keys } from "./keybindings";
-import { createTask, findNextTaskId, findPrevTaskId, getTimeSpent, getDatesSortedByOldest, stopTasks } from './utils';
+import {
+    createTask,
+    findNextTaskId,
+    findPrevTaskId,
+    getTimeSpent,
+    getDatesSortedByOldest,
+    stopTasks
+} from './utils';
 
 import './App.scss'
-import HelpPopup from './HelpPopup';
 
 const ONE_MINUTE = 60000;
 
@@ -25,6 +32,7 @@ function App () {
     const timerRef = useRef(0);
 
     useEffect(() => {
+        // Hide feedback message after some time
         if (feedbackMessage.show) {
             clearTimeout(timerRef.current);
             timerRef.current = setTimeout(() =>
@@ -33,16 +41,18 @@ function App () {
             );
         }
 
+        // Set current task when none is set
         if (!currentTaskId && tasks.length > 0) {
             setCurrentTaskId(tasks[tasks.length - 1].id);
         }
 
+        // Ensure that there's always at least one task
         if (tasks.length === 0) {
             setTasks([createTask("New Task")]);
         }
 
+        // Stop running tasks before page is closed
         const onBeforeUnload = () => setTasks(stopTasks(tasks));
-
         window.addEventListener("beforeunload", onBeforeUnload);
 
         return () => {
@@ -73,7 +83,9 @@ function App () {
                     break;
 
                 case keys.isAddTask(ev.key):
-                    addTask(createTask("New task"));
+                    ev.preventDefault();
+                    addTask(createTask("New Task"));
+                    setIsEditing(true);
                     break;
 
                 case keys.isDeleteTask(ev.key):
